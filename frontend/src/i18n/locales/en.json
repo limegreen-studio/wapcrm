@@ -2988,5 +2988,24 @@
       "accepted": "Accepted",
       "paid": "Paid"
     }
+  },
+  "tour": {
+    "welcomeTitle": "Welcome to WAPcrm",
+    "welcomeDesc": "Take a quick look at where everything is, or skip and explore on your own.",
+    "start": "Take the tour",
+    "skip": "Skip, I'll explore",
+    "next": "Next",
+    "back": "Back",
+    "done": "Got it",
+    "progress": "{current} of {total}",
+    "pipeline": "Your leads on a board. Drag them between stages. Reports and more are in the More menu.",
+    "chat": "Every WhatsApp conversation in one inbox. Reply, assign and add follow-ups from here.",
+    "tasks": "The follow-ups you need to do, with overdue ones flagged.",
+    "campaigns": "Send approved WhatsApp templates to many contacts at once.",
+    "dashboard": "Your key numbers at a glance.",
+    "settings": "Connect your WhatsApp number under Accounts and invite your team under Users.",
+    "replayTitle": "That's the tour",
+    "replayDesc": "Replay it any time from this menu. You can also change your status, theme and language here.",
+    "replay": "Replay tour"
   }
 }

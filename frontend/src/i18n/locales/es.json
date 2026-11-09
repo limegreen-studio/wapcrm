@@ -2673,5 +2673,24 @@
       "accepted": "Aceptado",
       "paid": "Pagado"
     }
+  },
+  "tour": {
+    "welcomeTitle": "Bienvenido a WAPcrm",
+    "welcomeDesc": "Eche un vistazo rápido a dónde está todo, u omítalo y explore por su cuenta.",
+    "start": "Hacer el recorrido",
+    "skip": "Omitir, exploraré yo",
+    "next": "Siguiente",
+    "back": "Atrás",
+    "done": "Entendido",
+    "progress": "{current} de {total}",
+    "pipeline": "Sus leads en un tablero. Arrástrelos entre etapas. Los informes y otras opciones están en el menú Más.",
+    "chat": "Todas las conversaciones de WhatsApp en una bandeja. Responda, asigne y añada seguimientos desde aquí.",
+    "tasks": "Los seguimientos que tiene pendientes, con los atrasados marcados.",
+    "campaigns": "Envíe plantillas de WhatsApp aprobadas a muchos contactos a la vez.",
+    "dashboard": "Sus cifras clave de un vistazo.",
+    "settings": "Conecte su número de WhatsApp en Cuentas e invite a su equipo en Usuarios.",
+    "replayTitle": "Fin del recorrido",
+    "replayDesc": "Repítalo cuando quiera desde este menú. Aquí también puede cambiar su estado, tema e idioma.",
+    "replay": "Repetir recorrido"
   }
 }

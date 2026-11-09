@@ -149,3 +149,5 @@ The owner asked for the WAPcrm name, a Nord theme with a tint of green, and a ne
 | D32 | What "tint of green" means | Polar Night surfaces stay canonical; Aurora green `#A3BE8C` is primary, with a green-tinted hover surface and page glow | Keeps it recognizably Nord. Light mode uses `#54743D` because nord14 fails contrast on light surfaces. |
 | D33 | WhatsApp previews | Flow and template previews keep real WhatsApp colors | They simulate how a message looks in WhatsApp. |
 | D34 | CI on the new repo | Docker Hub removed, GHCR only. Develop image and docs deploy are manual until the owner enables them. Tests still run on push | Avoids Actions minutes on image builds, and GitHub Pages from a private repo can be public. |
+
+| D35 | First-run walkthrough | `driver.js` (MIT, no dependencies). Welcome card with Take the tour or Skip, then sidebar highlights filtered by what the user can see. Replay from the user menu. Seen flag in localStorage per user | Owner asked for an existing package and something simple. No backend change, so it can show once more on a new browser. Not shown under `navigator.webdriver`, so the overlay does not block e2e. |

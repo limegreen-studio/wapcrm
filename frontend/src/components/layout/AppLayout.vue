@@ -19,6 +19,7 @@ import UserMenu from './UserMenu.vue'
 import ActiveCallPanel from '@/components/calling/ActiveCallPanel.vue'
 import { ScrollToTop } from '@/components/shared'
 import { navigationSections, type NavSection } from './navigation'
+import { useProductTour } from '@/composables/useProductTour'
 
 useI18n() // Enable $t() in template
 
@@ -27,12 +28,15 @@ const router = useRouter()
 const authStore = useAuthStore()
 const isCollapsed = ref(false)
 const isMobileMenuOpen = ref(false)
+const { startTourIfNew } = useProductTour()
 
 // Refresh user data and connect WebSocket on mount
 onMounted(() => {
   if (authStore.isAuthenticated) {
     // Fetch fresh permissions in background (non-destructive — interceptor handles 401)
-    authStore.refreshUserData()
+    authStore.refreshUserData().then(ok => {
+      if (ok) startTourIfNew()
+    })
 
     wsService.connect(async () => {
       try {
@@ -73,6 +77,7 @@ function filterItems(items: NavSection['items']) {
       return {
         ...item,
         path: effectivePath,
+        tourId: originalPath,
         active: isActive,
         children: filteredChildren
       }
@@ -204,6 +209,7 @@ const handleLogout = async () => {
                     isCollapsed && 'md:justify-center md:px-2'
                   ]"
                   :data-active="item.active"
+                  :data-tour="item.tourId"
                   role="menuitem"
                   :aria-current="item.active ? 'page' : undefined"
                   @click="isMobileMenuOpen = false"
@@ -252,6 +258,7 @@ const handleLogout = async () => {
                 isCollapsed && 'md:justify-center md:px-2'
               ]"
               :data-active="item.active"
+              :data-tour="item.tourId"
               role="menuitem"
               :aria-current="item.active ? 'page' : undefined"
               @click="isMobileMenuOpen = false"

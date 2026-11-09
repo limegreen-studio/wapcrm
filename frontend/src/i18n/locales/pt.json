@@ -2985,5 +2985,24 @@
       "accepted": "Aceito",
       "paid": "Pago"
     }
+  },
+  "tour": {
+    "welcomeTitle": "Bem-vindo ao WAPcrm",
+    "welcomeDesc": "Veja rapidamente onde está cada coisa, ou pule e explore por conta própria.",
+    "start": "Fazer o tour",
+    "skip": "Pular, vou explorar",
+    "next": "Próximo",
+    "back": "Voltar",
+    "done": "Entendi",
+    "progress": "{current} de {total}",
+    "pipeline": "Seus leads em um quadro. Arraste-os entre as etapas. Relatórios e outras opções ficam no menu Mais.",
+    "chat": "Todas as conversas do WhatsApp em uma caixa de entrada. Responda, atribua e adicione acompanhamentos aqui.",
+    "tasks": "Os acompanhamentos que você precisa fazer, com os atrasados sinalizados.",
+    "campaigns": "Envie modelos aprovados do WhatsApp para muitos contatos de uma vez.",
+    "dashboard": "Seus principais números em um relance.",
+    "settings": "Conecte seu número do WhatsApp em Contas e convide sua equipe em Usuários.",
+    "replayTitle": "Fim do tour",
+    "replayDesc": "Repita quando quiser neste menu. Aqui você também pode mudar seu status, tema e idioma.",
+    "replay": "Repetir tour"
   }
 }

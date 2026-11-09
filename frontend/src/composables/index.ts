@@ -6,6 +6,7 @@ export { usePagination, getPageNumbers, type PaginationOptions, type PaginationR
 
 // Existing composables
 export { useColorMode } from './useColorMode'
+export { useProductTour } from './useProductTour'
 export { useFlowHistory } from './useFlowHistory'
 export { useFlowSimulation } from './useFlowSimulation'
 export { useConditionEvaluator } from './useConditionEvaluator'

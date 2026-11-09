@@ -23,11 +23,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
-import { LogOut, User } from 'lucide-vue-next'
+import { LogOut, User, Compass } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { getInitials } from '@/lib/utils'
 import ThemeSwitcher from './ThemeSwitcher.vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
+import { useProductTour } from '@/composables/useProductTour'
 
 const { t } = useI18n()
 
@@ -160,10 +161,17 @@ onUnmounted(() => {
 const handleLogout = () => {
   emit('logout')
 }
+
+const { startTour } = useProductTour()
+
+const replayTour = () => {
+  isUserMenuOpen.value = false
+  startTour()
+}
 </script>
 
 <template>
-  <div class="border-t border-white/[0.08] light:border-gray-200 p-2">
+  <div data-tour="user-menu" class="border-t border-white/[0.08] light:border-gray-200 p-2">
     <Popover v-model:open="isUserMenuOpen">
       <PopoverTrigger as-child>
         <Button
@@ -226,6 +234,14 @@ const handleLogout = () => {
             <span>{{ $t('userMenu.profile') }}</span>
           </Button>
         </RouterLink>
+        <Button
+          variant="ghost"
+          class="w-full justify-start px-2 py-1 h-auto text-[13px] font-normal text-white/70 hover:text-white hover:bg-white/[0.04] light:text-gray-600 light:hover:text-gray-900 light:hover:bg-gray-100"
+          @click="replayTour"
+        >
+          <Compass class="mr-2 h-3.5 w-3.5" aria-hidden="true" />
+          <span>{{ $t('tour.replay') }}</span>
+        </Button>
         <Separator class="my-1 bg-white/[0.08] light:bg-gray-200" />
         <div class="text-xs font-medium px-2 py-1 text-white/40 light:text-gray-500">{{ $t('userMenu.theme') }}</div>
         <ThemeSwitcher />
