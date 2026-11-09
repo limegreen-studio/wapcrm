@@ -1,0 +1,57 @@
+# Build and run from source: docker compose up -d --build
+# Needs config.toml (start from config.example.toml) and optionally .env.
+name: wapcrm
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: wapcrm:local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
+    environment:
+      WAPCRM_APP__NAME: WAPcrm
+      WAPCRM_DATABASE__HOST: db
+      WAPCRM_DATABASE__USER: ${POSTGRES_USER:-wapcrm}
+      WAPCRM_DATABASE__PASSWORD: ${POSTGRES_PASSWORD:-wapcrm}
+      WAPCRM_DATABASE__NAME: ${POSTGRES_DB:-wapcrm}
+      WAPCRM_REDIS__HOST: redis
+    volumes:
+      - ./config.toml:/app/config.toml:ro
+      - uploads:/app/uploads
+    command: ["server", "-migrate", "-config", "/app/config.toml"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  db:
+    image: docker.io/library/postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-wapcrm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wapcrm}
+      POSTGRES_DB: ${POSTGRES_DB:-wapcrm}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - pg:/var/lib/postgresql/data
+
+  redis:
+    image: docker.io/library/redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  pg:
+  uploads:

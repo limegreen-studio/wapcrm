@@ -46,6 +46,15 @@ cd frontend && npm run dev
 
 Dev database notes: the database password in config must be non-empty (any value such as `unused`) or the DSN breaks. Seed login is `admin@admin.com` / `admin`.
 
+## Deploy
+
+`compose.yml` at the repo root builds from source and needs `config.toml`. Compose overrides the database and Redis settings in `config.toml` from `.env`, so the two cannot disagree.
+
+```bash
+docker compose up -d --build
+make seed CONTAINER=<postgres container id or name>   # replaces the compose database
+```
+
 ## Brand and theme rules
 
 - Product name is written `WAPcrm`. Identifiers use `wapcrm` and `WAPCRM_`.

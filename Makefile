@@ -1,4 +1,4 @@
-.PHONY: all build build-prod run test clean docker-build docker-up docker-down migrate frontend-dev frontend-build
+.PHONY: seed all build build-prod run test clean docker-build docker-up docker-down migrate frontend-dev frontend-build
 
 # Go parameters
 GOCMD=go
@@ -13,7 +13,8 @@ BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
 LDFLAGS=-ldflags "-s -w -X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME)"
 
 # Docker parameters
-DOCKER_COMPOSE=docker compose -f docker/docker-compose.yml
+CONTAINER_ENGINE?=$(shell command -v docker >/dev/null 2>&1 && echo docker || echo podman)
+DOCKER_COMPOSE=$(CONTAINER_ENGINE) compose
 
 all: build
 
@@ -89,6 +90,10 @@ docker-up:
 
 docker-down:
 	$(DOCKER_COMPOSE) down
+
+seed:
+	@test -n "$(CONTAINER)" || (echo "Usage: make seed CONTAINER=<postgres container id or name>"; exit 1)
+	@CONTAINER_ENGINE=$(CONTAINER_ENGINE) sh docker/seed.sh "$(CONTAINER)"
 
 docker-logs:
 	$(DOCKER_COMPOSE) logs -f
@@ -166,6 +171,7 @@ help:
 	@echo "  docker-up      - Start Docker containers"
 	@echo "  docker-down    - Stop Docker containers"
 	@echo "  docker-logs    - View Docker logs"
+	@echo "  seed           - Replace the compose db with a copy (CONTAINER=<postgres container>)"
 	@echo ""
 	@echo "Other:"
 	@echo "  clean          - Remove build artifacts"

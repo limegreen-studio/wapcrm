@@ -1,0 +1,8 @@
+.git
+.env
+.env.*
+config.toml
+docs
+frontend/node_modules
+frontend/dist
+internal/frontend/dist
