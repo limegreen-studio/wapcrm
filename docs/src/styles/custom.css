@@ -1,0 +1,43 @@
+/* Nord palette with Aurora green as the accent */
+:root {
+  --sl-color-accent-low: #CEDDBF;
+  --sl-color-accent: #54743D;
+  --sl-color-accent-high: #33472A;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #ECEFF4;
+  --sl-color-gray-2: #E5E9F0;
+  --sl-color-gray-3: #D8DEE9;
+  --sl-color-gray-4: #A5AFC2;
+  --sl-color-gray-5: #7B88A1;
+  --sl-color-gray-6: #434C5E;
+  --sl-color-black: #2E3440;
+}
+
+:root[data-theme='dark'] {
+  --sl-color-accent-low: #3E5631;
+  --sl-color-accent: #A3BE8C;
+  --sl-color-accent-high: #CEDDBF;
+  --sl-color-white: #2E3440;
+  --sl-color-gray-1: #3B4252;
+  --sl-color-gray-2: #434C5E;
+  --sl-color-gray-3: #4C566A;
+  --sl-color-gray-4: #7B88A1;
+  --sl-color-gray-5: #A5AFC2;
+  --sl-color-gray-6: #D8DEE9;
+  --sl-color-black: #ECEFF4;
+}
+
+/* Image frames for dark mode visibility */
+img {
+  border-radius: 8px;
+  border: 1px solid var(--sl-color-gray-3);
+}
+
+/* Theme-aware screenshots: show light image by default, dark in dark mode */
+:root[data-theme='light'] .dark-only,
+:root:not([data-theme='dark']) .dark-only {
+  display: none !important;
+}
+:root[data-theme='dark'] .light-only {
+  display: none !important;
+}

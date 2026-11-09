@@ -1,0 +1,732 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Dark-first: Nord Polar Night surfaces, Aurora green (nord14) as the accent */
+  :root {
+    --background: 220 16% 22%; /* #2E3440 */
+    --foreground: 218 27% 94%; /* #ECEFF4 */
+    --card: 222 16% 28%; /* #3B4252 */
+    --card-foreground: 218 27% 94%; /* #ECEFF4 */
+    --popover: 220 17% 32%; /* #434C5E */
+    --popover-foreground: 218 27% 94%; /* #ECEFF4 */
+    --primary: 92 28% 65%; /* #A3BE8C */
+    --primary-foreground: 220 16% 22%; /* #2E3440 */
+    --secondary: 220 17% 32%; /* #434C5E */
+    --secondary-foreground: 218 27% 92%; /* #E5E9F0 */
+    --muted: 222 16% 28%; /* #3B4252 */
+    --muted-foreground: 217 21% 76%; /* #B4BECE */
+    --accent: 150 8% 30%; /* #46524C */
+    --accent-foreground: 218 27% 94%; /* #ECEFF4 */
+    --destructive: 353 50% 75%; /* #DFA0A7 */
+    --destructive-foreground: 220 16% 22%; /* #2E3440 */
+    --border: 220 17% 32%; /* #434C5E */
+    --input: 220 16% 36%; /* #4C566A */
+    --ring: 92 28% 65%; /* #A3BE8C */
+    --radius: 0.75rem;
+
+    /* Backs the Tailwind `white` color: Nord Snow Storm in dark mode */
+    --white-rgb: 236 239 244;
+
+    /* Glass effect utilities */
+    --glass-bg: rgba(236, 239, 244, 0.03);
+    --glass-bg-hover: rgba(236, 239, 244, 0.06);
+    --glass-border: rgba(236, 239, 244, 0.08);
+  }
+
+  /* Light mode - Nord Snow Storm, primary darkened for contrast on light surfaces */
+  .light {
+    --background: 218 27% 94%; /* #ECEFF4 */
+    --foreground: 220 16% 22%; /* #2E3440 */
+    --card: 220 27% 98%; /* #F8F9FB */
+    --card-foreground: 220 16% 22%; /* #2E3440 */
+    --popover: 220 27% 98%; /* #F8F9FB */
+    --popover-foreground: 220 16% 22%; /* #2E3440 */
+    --primary: 95 31% 35%; /* #54743D */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF */
+    --secondary: 218 27% 92%; /* #E5E9F0 */
+    --secondary-foreground: 220 16% 22%; /* #2E3440 */
+    --muted: 218 27% 92%; /* #E5E9F0 */
+    --muted-foreground: 220 16% 36%; /* #4C566A */
+    --accent: 92 26% 87%; /* #DEE7D6 */
+    --accent-foreground: 220 16% 22%; /* #2E3440 */
+    --destructive: 353 43% 46%; /* #A8434E */
+    --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+    --border: 219 28% 88%; /* #D8DEE9 */
+    --input: 219 28% 88%; /* #D8DEE9 */
+    --ring: 95 31% 35%; /* #54743D */
+    --white-rgb: 255 255 255;
+
+    /* Glass effect utilities for light mode */
+    --glass-bg: rgba(46, 52, 64, 0.02);
+    --glass-bg-hover: rgba(46, 52, 64, 0.04);
+    --glass-border: rgba(46, 52, 64, 0.08);
+  }
+
+  /* Legacy dark class support */
+  .dark {
+    --background: 220 16% 22%; /* #2E3440 */
+    --foreground: 218 27% 94%; /* #ECEFF4 */
+    --card: 222 16% 28%; /* #3B4252 */
+    --card-foreground: 218 27% 94%; /* #ECEFF4 */
+    --popover: 220 17% 32%; /* #434C5E */
+    --popover-foreground: 218 27% 94%; /* #ECEFF4 */
+    --primary: 92 28% 65%; /* #A3BE8C */
+    --primary-foreground: 220 16% 22%; /* #2E3440 */
+    --secondary: 220 17% 32%; /* #434C5E */
+    --secondary-foreground: 218 27% 92%; /* #E5E9F0 */
+    --muted: 222 16% 28%; /* #3B4252 */
+    --muted-foreground: 217 21% 76%; /* #B4BECE */
+    --accent: 150 8% 30%; /* #46524C */
+    --accent-foreground: 218 27% 94%; /* #ECEFF4 */
+    --destructive: 353 50% 75%; /* #DFA0A7 */
+    --destructive-foreground: 220 16% 22%; /* #2E3440 */
+    --border: 220 17% 32%; /* #434C5E */
+    --input: 220 16% 36%; /* #4C566A */
+    --ring: 92 28% 65%; /* #A3BE8C */
+    --white-rgb: 236 239 244;
+
+    /* Glass effect utilities */
+    --glass-bg: rgba(236, 239, 244, 0.03);
+    --glass-bg-hover: rgba(236, 239, 244, 0.06);
+    --glass-border: rgba(236, 239, 244, 0.08);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    line-height: 1.5;
+    font-weight: 400;
+    /* Subtle green tint for depth */
+    background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(163, 190, 140, 0.09), transparent);
+  }
+  .light body {
+    background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(84, 116, 61, 0.07), transparent);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium;
+    margin-top: 0;
+  }
+  h1 {
+    @apply text-2xl;
+    line-height: 1.25;
+  }
+  h2 {
+    @apply text-xl;
+    line-height: 1.4;
+  }
+  h3 {
+    @apply text-lg;
+    line-height: 1.5;
+  }
+  h4, h5, h6 {
+    @apply text-base;
+  }
+  a {
+    @apply text-primary font-medium;
+    text-decoration: none;
+  }
+}
+
+/* Consistent focus states */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+/* Skip link for accessibility */
+.skip-link {
+  @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Glass effect utility classes */
+.glass {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+.glass-hover:hover {
+  background: var(--glass-bg-hover);
+}
+
+/* Static card with depth - use for non-clickable stat cards */
+.card-depth {
+  @apply transition-all duration-300 relative overflow-hidden;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 2px 4px -2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Bottom line animation */
+.card-depth::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #A3BE8C, #8FBCBB, #88C0D0);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.card-depth:hover::after {
+  transform: scaleX(1);
+}
+
+.card-depth:hover {
+  @apply bg-white/[0.06] border-white/[0.12];
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.4),
+    0 4px 6px -4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.light .card-depth {
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.08),
+    0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+
+.light .card-depth:hover {
+  @apply bg-gray-50 border-gray-300;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* Interactive card hover effect - use for clickable cards */
+.card-interactive {
+  @apply transition-all duration-300 cursor-pointer;
+}
+
+.card-interactive:hover {
+  @apply border-white/20 bg-white/[0.06] shadow-2xl;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 30px -5px rgba(163, 190, 140, 0.15);
+  transform: translateY(-2px);
+}
+
+.light .card-interactive:hover {
+  @apply border-gray-300 bg-gray-50 shadow-xl;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 0 30px -5px rgba(84, 116, 61, 0.1);
+}
+
+/* List item hover - for contact lists, menu items, etc */
+.list-item-hover {
+  @apply transition-all duration-200;
+}
+
+.list-item-hover:hover {
+  @apply bg-white/[0.08];
+}
+
+.light .list-item-hover:hover {
+  @apply bg-gray-100;
+}
+
+/* Chat background - dark-first */
+.chat-background {
+  background-color: #2B303B;
+}
+
+.light .chat-background {
+  background-color: #E5E9F0;
+}
+
+/* Modern chat bubble styles */
+.chat-bubble {
+  @apply relative px-4 py-2.5 text-sm;
+  max-width: 65%;
+  border-radius: 1rem;
+}
+
+/* Incoming bubble - glass effect */
+.chat-bubble-incoming {
+  background-color: #3B4252;
+  color: #ECEFF4;
+  border-bottom-left-radius: 0.375rem;
+}
+
+/* Outgoing bubble - muted Nord green */
+.chat-bubble-outgoing {
+  background-color: #4F6548;
+  color: #ECEFF4;
+  border-bottom-right-radius: 0.375rem;
+}
+
+/* Light mode bubbles */
+.light .chat-bubble-incoming {
+  background-color: #F8F9FB;
+  color: #2E3440;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.light .chat-bubble-outgoing {
+  background-color: #D6E4C6;
+  color: #2E3440;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Legacy dark class support */
+.dark .chat-bubble-incoming {
+  background-color: #3B4252;
+  color: #ECEFF4;
+}
+
+.dark .chat-bubble-outgoing {
+  background-color: #4F6548;
+  color: #ECEFF4;
+}
+
+.chat-bubble-outgoing .text-destructive {
+  color: #E8B4BA;
+  font-size: 0.80rem;
+}
+
+.light .chat-bubble-outgoing .text-destructive {
+  color: #A8434E;
+  font-size: 0.80rem;
+}
+
+/* Time and status */
+.chat-bubble-time {
+  @apply text-[10px] mt-1 flex items-center gap-1.5 float-right;
+  margin-left: 8px;
+  margin-bottom: -4px;
+  position: relative;
+  top: 4px;
+}
+
+.chat-bubble-time span {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.chat-bubble-incoming .chat-bubble-time span {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.chat-bubble-outgoing .chat-bubble-time span {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.light .chat-bubble-time span {
+  color: rgba(46, 52, 64, 0.45);
+}
+
+.light .chat-bubble-outgoing .chat-bubble-time span {
+  color: rgba(46, 52, 64, 0.6);
+}
+
+/* Status icons */
+.chat-bubble-outgoing .chat-bubble-time .status-icon {
+  color: rgba(255, 255, 255, 0.6);
+  width: 16px;
+  height: 16px;
+}
+
+/* Read status - Nord Frost */
+.chat-bubble-outgoing .chat-bubble-time .status-icon.text-blue-400 {
+  color: #88C0D0 !important;
+}
+
+.light .chat-bubble-outgoing .chat-bubble-time .status-icon {
+  color: rgba(46, 52, 64, 0.4);
+}
+
+.light .chat-bubble-outgoing .chat-bubble-time .status-icon.text-blue-400 {
+  color: #88C0D0 !important;
+}
+
+/* Reply preview inside chat bubble */
+.reply-preview {
+  @apply border-l-2 rounded-lg;
+  background: rgba(255, 255, 255, 0.06);
+  border-left-color: #A3BE8C;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+}
+
+.reply-preview p {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.reply-preview .font-medium {
+  color: #A3BE8C;
+}
+
+.light .reply-preview {
+  background: rgba(0, 0, 0, 0.04);
+  border-left-color: #54743D;
+}
+
+.light .reply-preview p {
+  color: rgba(46, 52, 64, 0.7);
+}
+
+.light .reply-preview .font-medium {
+  color: #54743D;
+}
+
+.chat-bubble-outgoing .reply-preview {
+  background: rgba(0, 0, 0, 0.2);
+  border-left-color: rgba(255, 255, 255, 0.5);
+}
+
+.chat-bubble-outgoing .reply-preview p {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.chat-bubble-outgoing .reply-preview .font-medium {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.light .chat-bubble-outgoing .reply-preview {
+  background: rgba(0, 0, 0, 0.08);
+  border-left-color: #3E5631;
+}
+
+.light .chat-bubble-outgoing .reply-preview p {
+  color: rgba(46, 52, 64, 0.7);
+}
+
+.light .chat-bubble-outgoing .reply-preview .font-medium {
+  color: #3E5631;
+}
+
+/* Button reply style - shows when user clicks a button */
+.button-reply-bubble {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #A3BE8C;
+  font-weight: 500;
+}
+
+.button-reply-bubble .chat-bubble-time {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.chat-bubble-outgoing .button-reply-bubble {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.light .button-reply-bubble {
+  color: #54743D;
+}
+
+.light .button-reply-bubble .chat-bubble-time {
+  color: rgba(46, 52, 64, 0.45);
+}
+
+.light .chat-bubble-outgoing .button-reply-bubble {
+  color: #3E5631;
+}
+
+/* Interactive buttons */
+.interactive-buttons {
+  border-radius: 0 0 1rem 1rem;
+  overflow: hidden;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.interactive-buttons > div {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #A3BE8C; /* nord14 for dark mode incoming */
+}
+
+.interactive-buttons > div:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Interactive buttons inside outgoing (green) bubbles */
+.chat-bubble-outgoing .interactive-buttons {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.chat-bubble-outgoing .interactive-buttons > div {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.chat-bubble-outgoing .interactive-buttons > div:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.light .interactive-buttons {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.light .interactive-buttons > div {
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #54743D; /* darkened nord14 for light mode */
+}
+
+.light .interactive-buttons > div:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.light .chat-bubble-outgoing .interactive-buttons > div {
+  color: #3E5631; /* darker green for light mode outgoing */
+}
+
+/* Message highlight animation for scroll-to */
+@keyframes highlight-pulse {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: hsl(var(--primary) / 0.15); }
+}
+
+.highlight-message {
+  animation: highlight-pulse 0.5s ease-in-out 2;
+  border-radius: 0.5rem;
+}
+
+/* Reaction badges */
+.reaction-badge {
+  @apply text-sm px-1 py-0.5 rounded-full bg-muted/50;
+  font-size: 0.875rem;
+}
+
+.reactions-display {
+  margin-top: 4px;
+}
+
+/* Emoji picker theme override to match app theme */
+.v3-emoji-picker.v3-color-theme-dark {
+  --v3-picker-bg: #3B4252;
+  --v3-picker-fg: #ECEFF4;
+  --v3-picker-border: #4C566A;
+  --v3-picker-input-bg: #2E3440;
+  --v3-picker-input-border: #4C566A;
+  --v3-picker-input-focus-border: hsl(var(--ring));
+  --v3-picker-emoji-hover: #434C5E;
+}
+
+.light .v3-emoji-picker {
+  --v3-picker-bg: #F8F9FB;
+  --v3-picker-fg: #2E3440;
+  --v3-picker-border: #D8DEE9;
+  --v3-picker-input-bg: #ECEFF4;
+  --v3-picker-input-border: #D8DEE9;
+  --v3-picker-input-focus-border: hsl(var(--ring));
+  --v3-picker-emoji-hover: #E5E9F0;
+}
+
+/* ─── Page transitions ─── */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+/* ─── Micro-interactions ─── */
+
+/* Button press effect */
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* Staggered list item entrance */
+@keyframes list-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-list-in {
+  animation: list-in 0.25s ease both;
+}
+
+/* Success checkmark pop */
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pop-in {
+  animation: pop-in 0.3s ease both;
+}
+
+/* Sidebar active indicator bar */
+.nav-active-indicator {
+  position: relative;
+}
+
+.nav-active-indicator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  height: 50%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: hsl(var(--primary));
+  opacity: 0;
+  transform: scaleY(0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.nav-active-indicator[data-active="true"]::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+/* Skeleton shimmer (replaces plain pulse) */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.light .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 25%,
+    rgba(0, 0, 0, 0.08) 50%,
+    rgba(0, 0, 0, 0.04) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* Badge pulse for notifications */
+@keyframes badge-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(163, 190, 140, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(163, 190, 140, 0);
+  }
+}
+
+.badge-pulse {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+/* Status dot for active badges */
+.badge-dot::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-right: 6px;
+  opacity: 0.8;
+}
+
+/* Avatar gradient ring */
+.avatar-ring {
+  position: relative;
+}
+
+.avatar-ring::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(179 25% 65%));
+  z-index: -1;
+}
+
+/* Online status dot */
+.avatar-status {
+  position: relative;
+}
+
+.avatar-status::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #A3BE8C;
+  border: 2px solid hsl(var(--background));
+  z-index: 1;
+}
+
+.avatar-status.offline::after {
+  background: #7B88A1;
+}
+
+.avatar-status.away::after {
+  background: #EBCB8B;
+}
+
+.avatar-status-pulse::after {
+  animation: badge-pulse 2s ease-in-out infinite;
+}

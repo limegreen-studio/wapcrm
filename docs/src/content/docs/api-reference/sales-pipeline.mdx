@@ -1,0 +1,322 @@
+---
+title: Sales Pipeline
+description: Lead capture, pipelines, stages, lead fields and tasks API
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Overview
+
+See the [Sales Pipeline guide](/wapcrm/features/sales-pipeline) for concepts and permissions. All responses use the standard `{"status": "success", "data": ...}` envelope. Times are RFC 3339.
+
+<Aside type="note">
+  Users without `contacts:read` only see and change contacts assigned or transferred to them. Requests for other contacts return `404`.
+</Aside>
+
+## Capture a lead
+
+Create or update a contact and put it on a pipeline. Requires `contacts:write`. Authenticate with `X-API-Key`.
+
+```bash
+POST /api/leads
+```
+
+### Request Body
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `phone_number` | string | **Required.** Any format; only digits are kept (`+91 99111-22233` → `919911122233`). |
+| `name` | string | Contact name. Only set when the contact has no name yet. |
+| `whatsapp_account` | string | WhatsApp account name. Only set when empty. |
+| `pipeline_id` | uuid | Pipeline to use. Default pipeline when omitted. |
+| `stage` | string | Stage name (case-insensitive). First stage when omitted. |
+| `lead` | object | Lead field values by key (see `GET /api/lead-fields`). Max 255 characters each. |
+| `tags` | string[] | Added to existing tags. |
+| `note` | string | Extra text for the capture note on the conversation. |
+| `assigned_user_id` | uuid | Owner. Ignored when the contact already has one. |
+| `team_id` | uuid | Assign with the team's strategy when no owner is set and `assigned_user_id` is not given. |
+| `follow_up_in_minutes` | integer | 1–43200. Creates a follow-up task for the owner, due in that many minutes. |
+| `follow_up_title` | string | Task title. Default `Contact new lead`. |
+
+### Behaviour
+
+| | New phone number | Existing contact |
+|---|---|---|
+| Contact | Created (`contact.created` webhook) | Restored if deleted; name/account only filled when empty |
+| Stage | Set (`stage` or first stage) | Changed only when `stage` or `pipeline_id` is sent |
+| Lead fields | Set | Merged; other keys kept |
+| Owner | From `assigned_user_id` or `team_id` | Never replaced |
+
+The request is validated before anything is written: an unknown stage, team, user, pipeline or lead field returns `400`.
+
+### Response
+
+```json
+{
+  "status": "success",
+  "data": {
+    "contact_id": "502fbac0-...",
+    "created": true,
+    "pipeline_id": "020631d8-...",
+    "stage_id": "bfb17028-...",
+    "stage_name": "New",
+    "assigned_user_id": "8c1e...",
+    "task_id": "6b48291f-..."
+  }
+}
+```
+
+## Pipelines
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| `GET` | `/api/pipelines` | `chat:read` | List pipelines with stages. Creates the default pipeline on first call. |
+| `POST` | `/api/pipelines` | `settings.general:write` | Create a pipeline. |
+| `PUT` | `/api/pipelines/{id}` | `settings.general:write` | Rename and replace the stage list. |
+| `DELETE` | `/api/pipelines/{id}` | `settings.general:write` | Delete; its contacts are taken off the pipeline. |
+| `GET` | `/api/pipelines/{id}/board` | `chat:read` | Stages with cards. |
+| `GET` | `/api/pipelines/{id}/stats` | `chat:read` | Conversion numbers. |
+
+### Create / update body
+
+```json
+{
+  "name": "Sales",
+  "is_default": true,
+  "stages": [
+    { "id": "existing-stage-uuid", "name": "New", "color": "blue", "kind": "open" },
+    { "name": "Site visit", "color": "yellow", "kind": "open" },
+    { "name": "Won", "color": "green", "kind": "won" }
+  ]
+}
+```
+
+Stages are stored in the order given. On update, stages with an `id` are updated, stages without one are created, and missing stages are deleted. Deleting a stage that still holds contacts returns `409`.
+
+`kind` is `open`, `won` or `lost`. `color` is one of the tag colors.
+
+### Board
+
+Query parameters: `search` (name or phone), `assigned_user_id` (uuid or `unassigned`), `limit` (cards per stage, default 50, max 200). Add `stage_id` and `offset` to get the next page of one column only.
+
+```json
+{
+  "pipeline": { "id": "...", "name": "Sales", "stages": [ ... ] },
+  "columns": [
+    {
+      "id": "stage-uuid", "name": "New", "color": "blue", "kind": "open", "position": 0,
+      "total": 12,
+      "cards": [
+        {
+          "id": "contact-uuid",
+          "profile_name": "Ravi",
+          "phone_number": "919911122233",
+          "tags": ["fb-ads"],
+          "assigned_user_name": "Asha",
+          "stage_entered_at": "2026-11-08T10:00:00Z",
+          "pipeline_position": 1024,
+          "service_window_open": true,
+          "open_tasks": 1,
+          "next_task_due_at": "2026-11-08T10:10:00Z"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Stats
+
+Query parameters: `since` (contacts created at or after), `assigned_user_id` (`me`, `unassigned` or a uuid).
+
+```json
+{
+  "total": 40, "open": 31, "won": 6, "lost": 3, "win_rate": 0.667,
+  "by_stage": [ { "stage_id": "...", "name": "New", "kind": "open", "count": 12 } ],
+  "by_source": [ { "source": "Facebook", "count": 18, "won": 4 } ],
+  "overdue_tasks": 5,
+  "stale_open_leads": 7
+}
+```
+
+`win_rate` is `null` when nothing is closed. `stale_open_leads` counts open leads whose last message (or creation, if they have no messages) is more than 7 days old.
+
+## Move a contact
+
+Requires `chat:write`.
+
+```bash
+PUT /api/contacts/{id}/stage
+```
+
+```json
+{ "stage_id": "stage-uuid", "position": 1536 }
+```
+
+`position` is optional; without it the card goes to the end of the stage. `"stage_id": null` takes the contact off its pipeline. Returns the board card.
+
+A real stage change resets `stage_entered_at`, writes a conversation note, and fires `contact.stage_changed`.
+
+## Lead fields
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| `GET` | `/api/lead-fields` | `chat:read` | The organization's field definitions |
+| `PUT` | `/api/lead-fields` | `settings.general:write` | Replace the field definitions |
+| `PUT` | `/api/contacts/{id}/lead` | `chat:write` | Set values on one contact |
+
+### Field definitions
+
+```json
+{
+  "fields": [
+    { "key": "source", "label": "Source", "options": ["Website", "Referral"] },
+    { "key": "property_type", "label": "Property Type" }
+  ]
+}
+```
+
+`key`: lowercase letters, digits and `_`, starting with a letter, max 30. `label`: max 50. `options`: up to 30 suggestions. Up to 20 fields. Removing a field hides it but keeps stored values.
+
+### Values on a contact
+
+```json
+{ "fields": { "source": "Website", "property_type": "" } }
+```
+
+Only the keys sent change. An empty string removes that value. Keys that are not defined fields return `400`. The response contains the contact's full `metadata`.
+
+## No-reply rule
+
+| Method | Path | Permission |
+|--------|------|------------|
+| `GET` | `/api/lead-automation/no-reply` | `settings.general:read` |
+| `PUT` | `/api/lead-automation/no-reply` | `settings.general:write` |
+
+```json
+{
+  "enabled": true,
+  "hours": 24,
+  "create_task": true,
+  "task_title": "No reply: call them",
+  "template_id": "template-uuid",
+  "template_params": { "1": "{{name}}" }
+}
+```
+
+When enabled, `hours` must be 1–720 and at least one of `create_task` / `template_id` is required. The template must be approved, must not have a media header, and every body and header variable needs a value in `template_params`. `{{name}}` and `{{phone}}` in values are replaced per lead. See the [guide](/wapcrm/features/sales-pipeline/#when-a-lead-stops-replying) for when the rule fires.
+
+### Send a test
+
+```bash
+POST /api/lead-automation/no-reply/test
+```
+
+```json
+{ "contact_id": "contact-uuid", "template_id": "template-uuid", "template_params": { "1": "{{name}}" } }
+```
+
+Requires `settings.general:write`. `template_id` / `template_params` default to the saved rule. Sends immediately and returns `message_id`, `status`, `whatsapp_message_id`; returns `502` with Meta's error when WhatsApp rejects it.
+
+## Tasks
+
+| Method | Path | Permission |
+|--------|------|------------|
+| `GET` | `/api/tasks` | `chat:read` |
+| `POST` | `/api/tasks` | `chat:write` |
+| `PUT` | `/api/tasks/{id}` | `chat:write` |
+| `DELETE` | `/api/tasks/{id}` | `chat:write` |
+
+### List query parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `status` | `open` (default), `done`, `all` |
+| `assignee_id` | `me`, `unassigned` or a user uuid |
+| `contact_id` | Tasks on one contact |
+| `due_before`, `due_after` | RFC 3339 bounds on `due_at`. Overdue = `due_before=<now>`. |
+| `page`, `limit` | Pagination |
+
+Open tasks are ordered by due time (no due time last).
+
+### Create
+
+```json
+{
+  "contact_id": "contact-uuid",
+  "title": "Send site-visit slots",
+  "notes": "Prefers weekends",
+  "due_at": "2026-11-09T04:30:00Z",
+  "assignee_id": "user-uuid"
+}
+```
+
+`assignee_id` defaults to the creating user.
+
+### Update
+
+All fields optional: `title`, `notes`, `due_at`, `clear_due_at`, `assignee_id`, `clear_assignee`, `done`. Setting `due_at` re-arms the reminder.
+
+## Webhook events
+
+| Event | Payload fields |
+|-------|----------------|
+| `contact.stage_changed` | `contact_id`, `contact_phone`, `contact_name`, `pipeline_id`, `pipeline_name`, `from_stage_id`, `from_stage_name`, `to_stage_id`, `to_stage_name`, `changed_by_id` |
+| `task.due` | `task_id`, `title`, `due_at`, `contact_id`, `contact_phone`, `contact_name`, `assignee_id` |
+
+`from_stage_*` is `null` when the contact is added to a pipeline; `to_stage_*` is `null` when it is removed.
+
+## Lead operations
+
+| Method | Path | Permission | Purpose |
+|---|---|---|---|
+| POST | `/api/contacts/bulk` | `chat:write` (`contacts:write` to assign) | `contact_ids` (max 200) with `stage_id`, `assigned_user_id`, `clear_assignee`, `add_tags` |
+| GET | `/api/leads/queue` | `chat:write` | Unowned leads on open stages |
+| POST | `/api/contacts/{id}/claim` | `chat:write` | Take an unowned lead; `409` if already claimed |
+| PUT | `/api/contacts/{id}/deal` | `chat:write` | `deal_value`, `close_reason` |
+| GET | `/api/contacts/{id}/stage-history` | `chat:read` | Stage moves, newest first |
+| POST | `/api/contacts/{id}/call-outcome` | `chat:write` | `outcome` (`connected`, `no_answer`, `busy`, `callback`, `wrong_number`), `notes`, `follow_up_at` |
+| GET | `/api/contacts/duplicates` | `contacts:write` | Likely duplicate groups |
+| POST | `/api/contacts/merge` | `contacts:write` | `primary_id`, `duplicate_id`. Cannot be undone |
+| GET | `/api/pipelines/{id}/report` | `chat:read` | `from`, `to`, `group` (`day`, `week`, `month`), `format=csv` |
+
+`GET /api/pipelines/{id}/board` also accepts `tag`, `lead_key` with `lead_value`, `created_after` and `created_before`.
+
+`GET` and `PUT /api/lead-automation/no-reply` accept `pipeline_id`. The rule body accepts `steps`, at most 5, each with `hours`, `create_task`, `task_title`, `template_id` and `template_params`.
+
+## Public lead capture
+
+`POST /api/public/leads/{token}` takes JSON or form fields: `phone` or `phone_number`, `name`, `message` and `lead_<key>`. It needs no API key. Manage the token at `GET` and `PUT /api/lead-sources` and `POST /api/lead-sources/rotate` (`settings.general:write`).
+
+`GET` and `POST /api/public/facebook/{token}` receive Facebook Lead Ads events. The `X-Hub-Signature-256` signature is required.
+
+## Automations
+
+`GET`, `POST /api/automations` and `PUT`, `DELETE /api/automations/{id}` (`settings.general:write`; list needs `settings.general:read`).
+
+Body: `name`, `enabled`, `trigger` (`lead_created`, `first_message`, `stage_changed`, `tag_added`), optional `pipeline_id`, `stage_id`, `tag`, `source`, and `actions` (1 to 10).
+
+Each action has `type` (`assign_user`, `assign_team`, `add_tag`, `move_stage`, `create_task`, `send_template`), `delay_hours` (0 to 720) and the fields for its type: `user_id`, `team_id`, `tag`, `stage_id`, `task_title` with `task_due_hours`, or `template_id` with `template_params`.
+
+## Team report and template sends
+
+`GET /api/reports/team` (`contacts:read`) accepts `from` and `to` (RFC3339; default last 24 hours).
+
+`POST /api/contacts/bulk-template` (`contacts:write`) takes `contact_ids` (max 200), `template_id` and `template_params`, and returns `queued` and `skipped`. Sends run in the background. A failure is written as a note on that lead.
+
+## Sales settings, deals and quotes
+
+`GET` and `PUT /api/sales-settings` (`settings.general`): `default_country_code`, `currency_symbol`, `lead_sla` (`enabled`, `minutes`, `team_id`), `monthly_targets` (user id to amount).
+
+| Method | Path | Permission | Purpose |
+|---|---|---|---|
+| POST | `/api/contacts/{id}/new-deal` | `chat:write` | Start a new deal on a won or lost lead |
+| PUT | `/api/contacts/{id}/do-not-contact` | `chat:write` | `do_not_contact` |
+| GET | `/api/contacts/{id}/timeline` | `chat:read` | Notes, follow-ups, calls, quotes and closed deals |
+| GET, POST | `/api/contacts/{id}/quotes` | `chat:read`, `chat:write` | `title`, `items` (`name`, `quantity`, `price`), `tax_percent`, `notes`, `payment_url` |
+| POST | `/api/quotes/{id}/send` | `chat:write` | Send the link; `409` outside the 24-hour window |
+| PUT | `/api/quotes/{id}/status` | `chat:write` | `accepted` or `paid` |
+| DELETE | `/api/quotes/{id}` | `chat:write` | Delete |
+| GET, POST | `/api/push/key`, `/api/push/subscribe` | `chat:read` | Web push |
+
+`GET /api/public/quotes/{token}` is the customer page. `POST /api/public/quotes/{token}/accept` records acceptance.

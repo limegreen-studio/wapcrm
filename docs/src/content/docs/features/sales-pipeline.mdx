@@ -1,0 +1,247 @@
+---
+title: Sales Pipeline & Follow-ups
+description: Kanban pipeline, lead fields, follow-up tasks and lead capture
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+## Overview
+
+The sales layer turns every WhatsApp contact into a lead you can move through a pipeline. A contact **is** the lead: there is no separate lead record, so chat, notes, tags and assignment work as before.
+
+| Piece | Where |
+|-------|-------|
+| Pipeline board (Kanban) | **Pipeline** in the sidebar |
+| Stage, lead details, follow-ups for one lead | **Chat** → contact info panel |
+| Follow-up list across leads | **Tasks** in the sidebar |
+| Leads from websites, ads and other systems | [`POST /api/leads`](/wapcrm/api-reference/sales-pipeline/#capture-a-lead) |
+
+<Aside type="tip">
+  Upgrading an existing install? Start the server once with `-migrate` (see [Configuration](/wapcrm/getting-started/configuration/)). It adds the `pipelines`, `pipeline_stages` and `tasks` tables, the new contact columns and their indexes. Existing data is not changed.
+</Aside>
+
+## Pipelines and stages
+
+The first time anyone opens the board, a default **Sales** pipeline is created with the stages New, Contacted, Qualified, Negotiation, Won and Lost.
+
+Each stage has a name, a color and a type:
+
+- **Open**: work in progress.
+- **Won** / **Lost**: closed stages. They drive the win rate.
+
+To change stages, open **Pipeline → Edit stages**. You can rename, recolor, reorder, add and remove stages, and create more pipelines. A stage that still holds leads cannot be removed: move the leads first. Deleting a pipeline takes its leads off the board; the contacts themselves are kept.
+
+<Aside type="note">
+  Creating and editing pipelines needs the `settings.general:write` permission (admins and managers by default).
+</Aside>
+
+## Working the board
+
+- **Drag a card** to another column to change its stage, or within a column to reorder.
+- **Click a card** to open the chat.
+- The **green dot** on a card means the 24-hour service window is open, so you can send a free-form message. A grey dot means only a template can be sent.
+- The **clock** shows days in the current stage. The **calendar** shows the next follow-up and turns red when it is overdue.
+- Filter by name or phone, and by **My leads** / **Unassigned**.
+
+Every stage change writes a note on the conversation (for example *Stage changed: New → Qualified*), so the history is visible in chat. It also fires the `contact.stage_changed` webhook. Reordering inside one stage writes nothing.
+
+To put a contact on the board from chat, open the contact info panel and pick a **Stage**.
+
+### Numbers on the board
+
+The strip above the board shows, for the current filter: total leads, open, won, lost, win rate (won ÷ (won + lost)), overdue follow-ups, leads that have been quiet for 7+ days, and the top lead sources.
+
+## Lead details
+
+The contact info panel in chat has a **Lead details** section. Values are saved when you leave a field.
+
+Each organization chooses its own fields in **Pipeline → Lead fields** (admins). The default set is Source, Budget, Interest, City and Status. A field has:
+
+- a **label**, shown in the UI;
+- a **key**, used in the API and as the CSV column `lead_<key>`. It is set from the label when the field is created and cannot change afterwards;
+- optional **options**, offered as suggestions. Any value is still accepted.
+
+Removing a field only hides it: values saved on contacts are kept and reappear if you add the same key again. Up to 20 fields.
+
+The fields are stored in the contact's metadata under the `lead` key:
+
+```json
+{ "lead": { "source": "Facebook", "budget": "45L", "city": "Pune" } }
+```
+
+Other metadata keys (for example data collected by chatbot flows) are left untouched.
+
+### CSV import and export
+
+The contacts CSV import and export support these extra columns:
+
+| Column | Header label |
+|--------|--------------|
+| `stage` | Stage (matched by stage name, case-insensitive; the default pipeline wins when two pipelines share a name) |
+| `lead_<key>` for each lead field | `Lead <label>`, for example `lead_source` / `Lead Source` |
+
+Columns for keys that are not one of your lead fields are ignored.
+
+A row with an unknown stage name is reported as an error. With **update on duplicate**, a row that only has lead columns still updates the existing contact.
+
+## Follow-ups (tasks)
+
+A follow-up is a task linked to one contact, with a title, an optional due time and an assignee.
+
+- In chat: contact info panel → **Follow-ups** → **+**.
+- On the board: hover a card and click the calendar-plus icon.
+- Quick due times: in 1 hour, tomorrow 10:00, in 3 days, next week.
+
+The **Tasks** page groups follow-ups into Overdue, Today, Upcoming, All open and Done, for you or for everyone. Users who can list users (`users:read`, managers and admins by default) can pick the assignee when creating a follow-up and reassign open follow-ups from the Tasks page. Anyone with `chat:write` can change a follow-up's due time by clicking it on the Tasks page (quick picks, a date and time, or no due date); this re-arms its reminder.
+
+When a follow-up becomes due, the assignee gets an in-app notification with a link to the chat, and the `task.due` webhook fires. Each due time sends one reminder; changing the due time re-arms it.
+
+## Who sees what
+
+Pipelines, lead details and follow-ups use the existing chat permissions, so no role changes are needed after upgrading:
+
+| Action | Permission |
+|--------|------------|
+| View the board, stats, tasks | `chat:read` |
+| Move leads, edit lead details, create and complete follow-ups | `chat:write` |
+| Create, edit and delete pipelines; edit lead fields and the no-reply rule | `settings.general:write` |
+| Capture leads through the API | `contacts:write` |
+
+Users **without** `contacts:read` (agents, by default) only see leads assigned to them or transferred to them, the same rule as the chat list. They see tasks assigned to them and tasks on those leads.
+
+## Capturing leads from other systems
+
+<Steps>
+
+1. Create an API key in **Settings → API Keys**, as a user whose role has `contacts:write`.
+
+2. Send leads from your website form, ad platform or Zapier-style tool:
+
+   ```bash
+   curl -X POST https://your-host/api/leads \
+     -H "X-API-Key: whm_..." \
+     -H "Content-Type: application/json" \
+     -d '{
+       "phone_number": "+91 99111 22233",
+       "name": "Ravi",
+       "lead": { "source": "Facebook", "budget": "70L" },
+       "tags": ["fb-ads"],
+       "team_id": "<sales team id>",
+       "follow_up_in_minutes": 10
+     }'
+   ```
+
+3. The lead appears on the board right away. With `team_id`, it is assigned using the team's strategy (round robin or load balanced). With `follow_up_in_minutes`, the owner gets a follow-up task, which sends the reminder above.
+
+</Steps>
+
+The endpoint is safe to retry: the same phone number updates the existing contact instead of creating a duplicate. See the [API reference](/wapcrm/api-reference/sales-pipeline/#capture-a-lead) for every field.
+
+## When a lead stops replying
+
+**Pipeline → No-reply rule** (admins) acts on leads that have gone quiet:
+
+- **Who qualifies:** leads on an **open** stage whose last message is **ours** and older than the chosen number of hours (1–720).
+- **Actions:** create a follow-up for the lead owner (due immediately, so the owner gets the reminder), send an approved WhatsApp template, or both.
+- **Template values:** fill each template variable. `{{name}}` and `{{phone}}` are replaced with the lead's name and phone. Templates with an image, video or document header cannot be used.
+- **Once per silence:** after acting, the rule waits until the lead replies before it can act on that lead again, so a lead never gets the template twice in a row.
+- A note on the conversation records what was done. When the lead has no owner, the note and task are recorded under the admin who last saved the rule.
+
+The rule is checked every minute. With several server instances, each lead is handled by exactly one. If WhatsApp rejects the template, the note says so, with Meta's error.
+
+To check a template and your WhatsApp account without waiting, use **Send a test now** in the same dialog: search for a contact (use your own number) and send. Meta's error is shown if the send fails. A test send does not affect when the rule fires for that lead.
+
+<Aside type="caution">
+  Business-initiated templates are charged by Meta and count toward your messaging limits. Start with a long delay (for example 24–48 hours) and a utility or marketing template your customers expect.
+</Aside>
+
+### Automated follow-up paths
+
+- **New lead → assign → follow-up task**: `team_id` + `follow_up_in_minutes` on `POST /api/leads`.
+- **Lead stops replying → follow-up and/or template**: the no-reply rule above.
+- **Overdue follow-up → external action**: subscribe to `task.due` in **Settings → Webhooks** and send an email or an alert from your own system.
+- **Stage change → external action**: subscribe to `contact.stage_changed`, for example to sync won deals to accounting.
+
+## Working many leads at once
+
+Tick the box on a card to select it. The bar above the board moves the selected leads to a stage, assigns an owner (needs `contacts:write`) or adds a tag. Leads you cannot see are skipped.
+
+**Filters** narrow the board by tag, lead field or created date.
+
+On a phone, swipe between columns and use the picker on each card to change stage. With a keyboard, focus a card and press `Alt + ←` or `Alt + →`.
+
+## Lead queue
+
+**Lead queue** lists leads on open stages that have no owner. Anyone with `chat:write` can claim one. If two people claim the same lead, the first wins. The last message stays hidden from agents until they claim.
+
+## Deals, calls and history
+
+The chat sidebar has a **Deal** section with the deal value and won/lost reason. Each board column shows its total value. **Log call** records the outcome as a note and can create a follow-up. **Stage history** lists every move.
+
+## Duplicates
+
+**Duplicates** groups contacts whose numbers share the same last 10 digits. Choose which contact to keep. Messages, notes and tasks move to it, and it keeps the longer number because WhatsApp sends the full international form. Merging cannot be undone.
+
+## Reports
+
+**Reports** shows conversion by period, agent and source, plus average time in each stage, with CSV export. Reports use stage history, which starts when this feature is installed. Earlier moves are not included.
+
+## Lead sources
+
+**Lead sources** gives you a capture URL, a website form snippet and a Google Forms script. Anyone with the URL can add leads, so replace it if it leaks. Callers cannot set the pipeline, stage or owner.
+
+For Facebook Lead Ads, subscribe your Meta app's `leadgen` field to the URL shown, using the last part of the URL as the verify token, and save a Page access token and App secret.
+
+## Follow-up reminders outside the app
+
+The Tasks page has **Enable desktop alerts** for reminders while the tab is in the background. To email reminders to the assignee, fill in `[email]` in `config.toml`.
+
+## No-reply sequences
+
+A rule can apply to all pipelines or to one. A pipeline's own rule replaces the all-pipelines rule there, even while turned off. **Later steps** run after the first action if the lead stays silent; each step's hours count from the previous step, and a reply ends the sequence.
+
+## Automations
+
+**More → Automations** runs actions when something happens to a lead. Triggers are a new lead from a form or API, a new number messaging on WhatsApp, a lead moving to a stage, or a tag being added. Filter by stage, tag or source, then add steps: assign, tag, move stage, create a follow-up or send an approved template.
+
+A step with a wait is a drip. It is dropped if the lead replies or leaves the stage. Changes made by automations never fire other automations, so rules cannot loop. One rule sends a given template to a lead at most once in 24 hours, and marketing templates skip leads who opted out.
+
+<Aside type="caution">
+  Public forms accept any number. A template rule on new leads can spend money on spam, so add a tag or source filter.
+</Aside>
+
+## Team view
+
+**More → Team** shows each agent's open leads, leads waiting for a reply, leads never messaged, overdue follow-ups, messages sent, average reply time and wins. It needs `contacts:read`.
+
+## Selling from the board
+
+Cards show when the customer wrote last and how long is left in WhatsApp's 24-hour window. Select leads and use **Send template** to message them from the board (needs `contacts:write`). The phone icon on a card starts a normal phone call; use **Log call** to record how it went.
+
+## Sales settings
+
+**More → Sales settings** holds the default country code (added to 10-digit numbers typed without one), the currency symbol, monthly targets per agent, and speed-to-lead.
+
+**Speed-to-lead** moves a new lead to another team member if its owner has not messaged it within the time you set. A lead moves at most 3 times, and only leads created after the rule was turned on are covered. If chatbot business hours are set, it runs only during them.
+
+## Repeat customers
+
+On a won or lost lead, **New deal** starts a fresh deal at the first open stage. The closed deal stays in the reports, so every sale counts.
+
+Each stage has a chance of winning in **Edit stages**. The Team page multiplies open deal values by it to show a forecast.
+
+## Quotes and payment links
+
+**Quotes** in the chat sidebar builds an itemised quote with tax and an optional `https://` or `upi://` payment link. **Send on WhatsApp** works only inside the 24-hour window; outside it, copy the link. The customer opens a private page and can accept, which sets the deal value.
+
+## Do not contact
+
+Turning on **Do not contact** in the sidebar stops every template to that lead, from agents, automations, rules and campaigns.
+
+## Phone install and alerts
+
+Open the app in a phone browser and add it to the home screen. **Enable alerts on this device** on the Tasks page turns on push for new messages, due follow-ups and reassigned leads. On iPhone the app must be installed first. The server needs VAPID keys in `[push]` in `config.toml`.
+
+## Team managers
+
+A person with the **manager** role in a team sees the leads owned by that team's members and the Team page for those members, even without `contacts:read`.
