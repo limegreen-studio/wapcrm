@@ -10,6 +10,7 @@ import { TagBadge } from '@/components/ui/tag-badge'
 import { PageHeader, SearchInput, ErrorState } from '@/components/shared'
 import PipelineEditorDialog from '@/views/pipeline/PipelineEditorDialog.vue'
 import FollowUpDialog from '@/components/tasks/FollowUpDialog.vue'
+import ContactInfoDialog from '@/components/chat/ContactInfoDialog.vue'
 import LeadFieldsDialog from '@/views/pipeline/LeadFieldsDialog.vue'
 import NoReplyRuleDialog from '@/views/pipeline/NoReplyRuleDialog.vue'
 import LeadQueueDialog from '@/views/pipeline/LeadQueueDialog.vue'
@@ -222,8 +223,12 @@ function taskBadge(card: BoardCard): { label: string; overdue: boolean } | null 
   return { label, overdue }
 }
 
-function openChat(card: BoardCard) {
-  router.push(`/chat/${card.id}`)
+const infoCard = ref<BoardCard | null>(null)
+const infoOpen = ref(false)
+
+function openInfo(card: BoardCard) {
+  infoCard.value = card
+  infoOpen.value = true
 }
 
 function stageAccentClass(color: string): string {
@@ -668,8 +673,8 @@ async function onEditorSaved(pipelineId: string | null) {
                 tabindex="0"
                 @dragstart="onDragStart($event, card, column)"
                 @dragend="onDragEnd"
-                @click="openChat(card)"
-                @keydown.enter="openChat(card)"
+                @click="openInfo(card)"
+                @keydown.enter.prevent="openInfo(card)"
                 @keydown.alt.left.prevent="onCardArrow(card, column, -1)"
                 @keydown.alt.right.prevent="onCardArrow(card, column, 1)"
               >
@@ -786,6 +791,15 @@ async function onEditorSaved(pipelineId: string | null) {
       :contact-id="followUpCard.id"
       :contact-name="cardName(followUpCard)"
       @created="onFollowUpCreated"
+    />
+
+    <ContactInfoDialog
+      v-if="infoCard"
+      v-model:open="infoOpen"
+      :contact-id="infoCard.id"
+      :name="cardName(infoCard)"
+      :phone="infoCard.phone_number"
+      @changed="refreshAll"
     />
 
     <LeadFieldsDialog v-model:open="leadFieldsOpen" />

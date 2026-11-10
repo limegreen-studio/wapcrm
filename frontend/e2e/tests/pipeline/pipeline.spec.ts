@@ -89,6 +89,27 @@ test.describe('Pipeline board', () => {
     await expect(card(page, id)).toContainText((4321).toLocaleString())
   })
 
+  test('opens contact details from a card and edits them', async ({ page }) => {
+    const id = await captureLead(page, 'E2E Details')
+    await page.goto('/pipeline')
+    await card(page, id).click()
+
+    const details = page.getByRole('dialog')
+    await expect(details.getByRole('heading', { name: 'E2E Details' })).toBeVisible()
+    await expect(page).toHaveURL(/\/pipeline$/)
+
+    await details.getByLabel('Value', { exact: true }).fill('7654')
+    await details.getByLabel('Value', { exact: true }).blur()
+    await expect.poll(async () => (await api(page, 'GET', `/contacts/${id}`)).deal_value).toBe(7654)
+    await page.keyboard.press('Escape')
+    await expect(details).toBeHidden()
+    await expect(card(page, id)).toContainText((7654).toLocaleString())
+
+    await card(page, id).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Open chat' }).click()
+    await expect(page).toHaveURL(new RegExp(`/chat/${id}$`))
+  })
+
   test('opens the report page', async ({ page }) => {
     await captureLead(page, 'E2E Report')
     await page.goto('/pipeline/reports')

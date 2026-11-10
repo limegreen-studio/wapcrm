@@ -25,7 +25,7 @@ const props = defineProps<{
   canEdit: boolean
 }>()
 
-const emit = defineEmits<{ logged: []; newDeal: [card: BoardCard]; dncChanged: [value: boolean] }>()
+const emit = defineEmits<{ logged: []; newDeal: [card: BoardCard]; dncChanged: [value: boolean]; dealSaved: [dealValue: number, closeReason: string] }>()
 
 const { t } = useI18n()
 
@@ -55,6 +55,7 @@ async function saveDeal() {
     await leadsService.updateDeal(props.contactId, { deal_value: parsed, close_reason: reason.value })
     savedValue.value = value.value
     savedReason.value = reason.value
+    emit('dealSaved', parsed, reason.value)
   } catch (e) {
     value.value = savedValue.value
     reason.value = savedReason.value
